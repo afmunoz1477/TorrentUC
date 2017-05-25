@@ -27,10 +27,10 @@ import com.turn.ttorrent.client.SharedTorrent;
 public class TorrentClient {
 
 
-	public static final String IP = "157.253.220.103";
-	public static final String IPDEST = "157.253.223.253";
+	public static final String IP = "157.253.146.241";
+	public static final String IPDEST = "157.253.195.22";
 	public static final String PATH = "C:/Users/andre/Desktop/Andres/ProyectoUC/TorrentUC/TorrentUC/TorrentUC/torrent/";
-	public static final String TRACKER_URL = "http://"+IPDEST+":80/announce";
+	public static final String TRACKER_URL = "http://"+IPDEST+":10028/announce";
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void encodeObject(Object o, OutputStream out) throws IOException {
@@ -115,18 +115,18 @@ public class TorrentClient {
 
 	public static void main(String []args) throws UnknownHostException, IOException{
 		//Establecer nombre del archivo a crear 
-		String name = "OSX-Mavericks.iso";
+		String name = "uno";
 		String file = PATH +name+".torrent";
 		String sharedFile = PATH + name;
 		File torrentUbication = new File (""+file);
 		System.out.println("Parent Directory: " + torrentUbication.getParent());
 		//Crea el archivo torrent objetivo
-		createTorrent(new File(""+file), new File(""+sharedFile), TRACKER_URL);
+//		createTorrent(new File(""+file), new File(""+sharedFile), TRACKER_URL);
 
 		try {
 
 			//Transforma la IP de la maquina de String a InetAddress
-			InetAddress ip = InetAddress.getByName(IP);
+			InetAddress ip = InetAddress.getLocalHost();
 			System.out.println("IP: "+ip);
 			BasicConfigurator.configure();
 			System.out.printf("Inet Address: "+ip+
@@ -146,7 +146,7 @@ public class TorrentClient {
 
 			//Descarga un archivo de algun servidor
 			System.out.println("Download");
-			//		Download();
+//			Download();
 
 
 			// Metodo para compartir los torrent locales del cliente, tasa medida en segundos. 
