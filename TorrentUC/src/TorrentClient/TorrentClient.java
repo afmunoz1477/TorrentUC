@@ -1,6 +1,8 @@
 package TorrentClient;
 
+import java.awt.SecondaryLoop;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,11 +29,24 @@ import com.turn.ttorrent.client.SharedTorrent;
 public class TorrentClient {
 
 
-	public static final String IP = "157.253.146.241";
-	public static final String IPDEST = "157.253.195.22";
-	public static final String PATH = "C:/Users/andre/Desktop/Andres/ProyectoUC/TorrentUC/TorrentUC/TorrentUC/torrent/";
-	public static final String TRACKER_URL = "http://"+IPDEST+":10028/announce";
+	public static final String PATH = "./";
+	InetAddress ip;
+	String name = "Prueba2GB.rar";
+	String namePart = "Prueba2GB.rar.part";
+	String partPath = PATH+namePart;
+	String torrentPath = PATH+name;
+	String file = PATH +name+".torrent";
+	String sharedFile = PATH + name;
+	File torrentUbication = new File (""+file);
+	Boolean state;
+	Client client;
+	Boolean downloading = false;
+	String result = "";
 
+	public TorrentClient() {
+		BasicConfigurator.configure();
+		state = false;
+	}
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void encodeObject(Object o, OutputStream out) throws IOException {
 		if (o instanceof String)
@@ -113,48 +128,44 @@ public class TorrentClient {
 
 
 
-	public static void main(String []args) throws UnknownHostException, IOException{
+	public void startTorrent(DataOutputStream server) throws UnknownHostException, IOException{
+
 		//Establecer nombre del archivo a crear 
-		String name = "uno";
-		String file = PATH +name+".torrent";
-		String sharedFile = PATH + name;
-		File torrentUbication = new File (""+file);
 		System.out.println("Parent Directory: " + torrentUbication.getParent());
 		//Crea el archivo torrent objetivo
-//		createTorrent(new File(""+file), new File(""+sharedFile), TRACKER_URL);
+		//		createTorrent(new File(""+file), new File(""+sharedFile), TRACKER_URL);
 
-		try {
+		try { 
 
 			//Transforma la IP de la maquina de String a InetAddress
-			InetAddress ip = InetAddress.getLocalHost();
-			System.out.println("IP: "+ip);
-			BasicConfigurator.configure();
-			System.out.printf("Inet Address: "+ip+
-					"\n"+"File: " + file+"\n"
-					+"Shared: "+sharedFile);
+			ip = InetAddress.getLocalHost();
+
+			System.out.printf("Inet Address: "+ip+"\n"+"File: " + file+"\n"+"Shared: "+sharedFile);
 
 			//Metodo del cliente se encarga de obtener el archivo original completo de un Torrent
-			Client client = new Client(ip, 
+			client = new Client(ip, 
 					SharedTorrent.fromFile(new File(""+file),new File(""+sharedFile).getParentFile()));
-
-
-
 
 			// Establecer limites de subida y bajada de informacion en KB/seg
 			client.setMaxDownloadRate(500000.0);
 			client.setMaxUploadRate(500000.0);
 
 			//Descarga un archivo de algun servidor
-			System.out.println("Download");
-//			Download();
-
 
 			// Metodo para compartir los torrent locales del cliente, tasa medida en segundos. 
 			client.share(3600);
-			
+			this.state = true;
 			// Metodo que se encarga de esperar a que el proceso de descarga finalice exitosamente 
-			client.waitForCompletion();
-			
+			//client.waitForCompletion();
+			double start = System.currentTimeMillis();
+			Boolean fileTo = false;
+
+
+
+
+			this.state = true;
+			server.writeUTF("Agent downloading file: --> "+this.state);
+
 			//client.stop() - Para detener el cliente.
 		} 
 		catch (NoSuchAlgorithmException e) {
@@ -163,23 +174,46 @@ public class TorrentClient {
 		}
 	}
 
-	//Descargar archivo desde un servidor.
-	public static void Download() throws IOException {
-		
-		//Nombre que se le pondrá al archivo
-		String fileName= "nuevo.torrent";
-		
-		//URL del archivo a descargar del servidor web
-		String url_1 = "http://cdimage.debian.org/debian-cd/8.6.0/amd64/bt-dvd/debian-8.6.0-amd64-DVD-1.iso.torrent";
-		
-		URL url = new URL(url_1);
-		System.out.println(url_1);
-		try (
+	public Boolean shutdown() throws InterruptedException {
+		// TODO Auto-generated method stub
+		client.stop();
+		this.state = false;
+		return this.state;
+	}
 
-			InputStream is = url.openStream()) {
-			Files.copy(is, Paths.get(PATH+File.separator+fileName));
-			
-		}   
+	public String deleteFile() {
+		String resp = null;
+		File fileTorrent = new File(torrentPath);
+		File filePart = new File(partPath);
+		if(fileTorrent.exists()){
+			if(fileTorrent.delete()){
+				resp = "File: "+fileTorrent.getAbsolutePath()+", was delete!!";
+			}else{
+				resp = "Error deleting file!";
+			}
+		}else if(filePart.exists()){
+			if(filePart.delete()){
+				resp = "File: "+filePart.getAbsolutePath()+", was delete!!";
+			}else{
+				resp = "File doesn't exist!!";
+			}
+		}else{
+			resp = "Error deleting file!";
+		}
+
+		return resp;
+	}
+	public int getCompletion() {
+		// TODO Auto-generated method stub
+		if(this.downloading){
+			return 1;
+		}else{
+			return 0;
+		}
+	}
+	public String getResult() {
+		// TODO Auto-generated method stub
+		return this.result;
 	}
 }
 
